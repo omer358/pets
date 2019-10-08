@@ -15,10 +15,12 @@
  */
 package com.example.android.pets;
 
+import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -29,8 +31,11 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -69,8 +74,16 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         });
         mDbHelper=new PetDbHelper(this);
 
-        ListView listView= findViewById(R.id.list_item);
+        // Find the ListView which will be populated with the pet data
+        ListView listView = (ListView) findViewById(R.id.list_item);
+
+        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        View emptyView = findViewById(R.id.empty_view);
+        listView.setEmptyView(emptyView);
+        listView.setLongClickable(true);
+
         adapter=new PetCursorAdapter(this,null);
+
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -82,14 +95,10 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             }
         });
 
+
+
         getSupportLoaderManager().initLoader(URL_LOADER,null,this);
     }
-
-
-    /**
-     * Temporary helper method to display information in the onscreen TextView about the state of
-     * the pets database.
-     */
 
     private void insertPets(){
 
@@ -103,6 +112,14 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
         Uri newRowId =getContentResolver().insert(PetEntry.CONTENT_URI,values);
         Log.v("CatalogActivity","new row ID"+newRowId);
+    }
+
+    private void deletePets(){
+
+        int deletedPets=getContentResolver().delete(PetEntry.CONTENT_URI,null,null);
+
+       
+        Log.v("catalogActivity",deletedPets+" pets have been deleted..");
     }
 
     @Override
@@ -123,7 +140,8 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
                 return true;
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
-                // Do nothing for now
+                //delete all the pets from the list
+                deletePets();
                 return true;
         }
         return super.onOptionsItemSelected(item);
